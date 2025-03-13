@@ -1,0 +1,5 @@
+https://github.com/henkelmax/simple-voice-chat
+
+i want you to look at the api folder in this minecraft voicechat mod and see where 
+I would start the process of like wanting to process the voice packets and using 
+the data from those packets and transfering them into readable text
