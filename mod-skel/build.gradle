@@ -8,22 +8,24 @@ group = 'com.transcriber'
 
 repositories {
     // This repository is where Gradle will find the voice chat API
-    maven { url 'https://maven.maxhenkel.de/repository/public' }
+    // maven { url 'https://maven.maxhenkel.de/repository/public' }
     mavenCentral()
-    maven { url 'https://maven.fabricmc.net/' }
+    // maven { url 'https://maven.fabricmc.net/' }
     flatDir {
         dirs 'libs'
     }
 }
 
 dependencies {
+    // standard Fabric setup
     minecraft "com.mojang:minecraft:1.21.5"
     mappings loom.officialMojangMappings()
     modImplementation "net.fabricmc:fabric-loader:0.14.21"
 
-    // Let Gradle download the API for you
-    // The version is constructed from the Minecraft version and API version
+    // your local 2.5.27 API jar (place voicechat-api-2.5.27.jar into <project>/libs/)
     modImplementation files("libs/voicechat-api-2.5.31.jar")
+
+    // your other deps
     implementation 'com.alphacephei:vosk:0.3.45'
 }
 
