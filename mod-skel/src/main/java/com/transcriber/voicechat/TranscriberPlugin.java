@@ -1,44 +1,53 @@
 package com.transcriber.voicechat;
 
-import de.maxhenkel.voicechat.api.VoicechatAPI;
-import de.maxhenkel.voicechat.api.VoicechatConnection;
-import de.maxhenkel.voicechat.api.audio.MicrophonePacket;
+import de.maxhenkel.voicechat.api.VoicechatApi;
+import de.maxhenkel.voicechat.api.VoicechatPlugin;
+import de.maxhenkel.voicechat.api.VoicechatServer;
+import de.maxhenkel.voicechat.api.events.EventRegistration;
 import de.maxhenkel.voicechat.api.events.MicrophonePacketEvent;
 import de.maxhenkel.voicechat.api.events.VoicechatServerStartedEvent;
-import de.maxhenkel.voicechat.api.events.VoicechatServerStoppedEvent;
-import de.maxhenkel.voicechat.api.server.ServerVoicechatApi;
-import de.maxhenkel.voicechat.api.ServerPlugin;
+import de.maxhenkel.voicechat.api.VoicechatConnection;
 
 import java.io.File;
 import java.io.FileOutputStream;
-import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.UUID;
 
-public class TranscriberPlugin implements ServerPlugin {
+public class TranscriberPlugin implements VoicechatPlugin {
 
-    private ServerVoicechatApi api;
+    private static final String PLUGIN_ID = "transcriber_plugin";
 
     @Override
-    public void onServerVoicechatStarted(VoicechatServerStartedEvent event) {
-        api = event.getVoicechat();
-        api.registerEventListener(MicrophonePacketEvent.class, this::onMicPacket);
-        System.out.println("Voicechat started and MicrophonePacketEvent registered.");
+    public String getPluginId() {
+        return PLUGIN_ID;
     }
 
     @Override
-    public void onServerVoicechatStopped(VoicechatServerStoppedEvent event) {
-        System.out.println("Voicechat stopped.");
+    public void initialize(VoicechatApi api) {
+        System.out.println("Transcriber plugin initialized.");
+    }
+
+    @Override
+    public void registerEvents(EventRegistration registration) {
+        registration.registerEvent(VoicechatServerStartedEvent.class, this::onServerStarted);
+    }
+
+    private void onServerStarted(VoicechatServerStartedEvent event) {
+        VoicechatServer server = event.getVoicechat();
+        server.registerEventListener(MicrophonePacketEvent.class, this::onMicPacket);
+        System.out.println("Voicechat server started and MicrophonePacketEvent registered.");
     }
 
     private void onMicPacket(MicrophonePacketEvent event) {
-        MicrophonePacket packet = event.getPacket();
         VoicechatConnection connection = event.getConnection();
+        if (connection == null || connection.getPlayer() == null) {
+            return;
+        }
 
-        byte[] audioData = packet.getOpusEncodedData();
+        byte[] audioData = event.getPacket().getOpusEncodedData();
         UUID playerUUID = connection.getPlayer().getUuid();
         String timestamp = new SimpleDateFormat("yyyyMMdd_HHmmss").format(new Date());
         String fileName = "voice_" + playerUUID + "_" + timestamp + ".opus";
@@ -51,21 +60,21 @@ public class TranscriberPlugin implements ServerPlugin {
             }
             System.out.println("Saved voice packet from " + playerUUID + " to " + filePath);
 
-            // Decode and transcribe
+            /*
+            // Your transcription logic here.
+            // WARNING: Running this on the server's network thread can cause severe lag.
+            // Consider running this logic in a separate, asynchronous thread.
             String wavPath = OpusDecoder.convertToWav(filePath);
             VoskTranscriber transcriber = new VoskTranscriber("models/vosk-model-small-en-us-0.15");
             String transcription = transcriber.transcribe(wavPath);
             String txtPath = filePath.replace(".opus", ".txt");
             transcriber.saveTranscription(transcription, txtPath);
             System.out.println("Transcription saved to " + txtPath);
+            */
 
         } catch (Exception e) {
             System.err.println("Failed to process voice packet: " + e.getMessage());
+            e.printStackTrace();
         }
-    }
-
-    @Override
-    public String getPluginId() {
-        return "transcriber_plugin";
     }
 }
