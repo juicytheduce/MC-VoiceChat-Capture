@@ -3,38 +3,31 @@ plugins {
     id 'fabric-loom' version '1.10.1'
 }
 
-version = '1.0.0'
 group = 'com.transcriber'
+version = '1.0.0'
+archivesBaseName = 'transcriber'
+
+java {
+    toolchain.languageVersion.set(JavaLanguageVersion.of(17))
+}
 
 repositories {
-    // This repository is where Gradle will find the voice chat API
-    // maven { url 'https://maven.maxhenkel.de/repository/public' }
     mavenCentral()
-    // maven { url 'https://maven.fabricmc.net/' }
-    flatDir {
-        dirs 'libs'
-    }
 }
 
 dependencies {
-    // standard Fabric setup
+    // 1) Minecraft + mappings + Fabric loader:
     minecraft "com.mojang:minecraft:1.21.5"
     mappings loom.officialMojangMappings()
     modImplementation "net.fabricmc:fabric-loader:0.14.21"
 
-    // your local 2.5.27 API jar (place voicechat-api-2.5.27.jar into <project>/libs/)
-    modImplementation files("libs/voicechat-api-2.5.31.jar")
+    // 2) The *full* Simple Voice Chat mod (2.5.30), not just the “API”:
+    modImplementation "de.maxhenkel.voicechat:voicechat:2.5.30"
 
-    // your other deps
+    // 3) Vosk for transcription (v0.3.45). Make sure this matches the version you want:
     implementation 'com.alphacephei:vosk:0.3.45'
 }
 
 tasks.withType(JavaCompile).configureEach {
     options.encoding = 'UTF-8'
-    options.release = 21
-}
-
-java {
-    withSourcesJar()
-    toolchain.languageVersion.set(JavaLanguageVersion.of(21))
 }

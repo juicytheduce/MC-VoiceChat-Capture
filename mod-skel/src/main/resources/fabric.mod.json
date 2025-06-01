@@ -1,21 +1,19 @@
 {
   "schemaVersion": 1,
-  "id": "transcriber_mod",
-  "version": "1.0.0",
-  "name": "Voice Transcriber",
-  "authors": [
-    "Your Name"
-  ],
-  "license": "MIT",
-  "environment": "server",
+  "id": "transcriber",
+  "version": "${version}",
+
+  "environment": "*",
   "entrypoints": {
-    "voicechat": [
-      "com.transcriber.voicechat.TranscriberPlugin"
+    "main": [
+      "com.transcriber.voicechat.TranscriberMod"
     ]
   },
+
   "depends": {
     "fabricloader": ">=0.14.21",
-    "minecraft": ">=1.21",
-    "voicechat": ">=2.5.31"
+    "fabric": "*",
+    "minecraft": "1.21.5",
+    "voicechat": "2.5.30"
   }
 }
