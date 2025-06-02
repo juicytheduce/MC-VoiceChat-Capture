@@ -1,33 +1,51 @@
 package com.transcriber.voicechat;
 
-import java.io.File;
-import java.io.IOException;
+import java.io.*;
+import java.nio.file.*;
+import java.util.concurrent.TimeUnit;
 
-/**
- * Stub for converting an Opus file to WAV.
- * Replace this with your actual implementation (ffmpeg, native binding, etc.).
- */
 public class OpusDecoder {
+    public static String convertToWav(String opusPath, String outputDir) throws IOException {
+        Path opusFile = Paths.get(opusPath);
+        if (!Files.exists(opusFile) || Files.size(opusFile) == 0) {
+            throw new IOException("Invalid OPUS file: " + opusPath);
+        }
 
-    /**
-     * Convert a .opus file at inputPath to a .wav file at outputPath.
-     * You can call ffmpeg, or use any native library. This is just a placeholder.
-     */
-    public static void convertToWav(String inputOpusPath, String outputWavPath) throws IOException, InterruptedException {
-        // Example using ffmpeg CLI on the host (if you have it installed):
-        //    ffmpeg -y -i recordings/voice_*.opus recordings/voice_*.wav
-        // Note: In a real server environment, ffmpeg must be on PATH, or bundle a native library.
+        String fileName = opusFile.getFileName().toString().replace(".opus", ".wav");
+        String wavPath = Paths.get(outputDir, fileName).toString();
+        Files.createDirectories(Paths.get(outputDir));
+
         ProcessBuilder pb = new ProcessBuilder(
             "ffmpeg",
             "-y",
-            "-i", inputOpusPath,
-            outputWavPath
+            "-i", opusPath,
+            "-acodec", "pcm_s16le",
+            "-ar", "16000",
+            "-ac", "1",
+            "-hide_banner",
+            "-loglevel", "error",
+            wavPath
         );
-        pb.inheritIO();
-        Process p = pb.start();
-        int exitCode = p.waitFor();
-        if (exitCode != 0) {
-            throw new IOException("ffmpeg returned non-zero code: " + exitCode);
+
+        try {
+            Process process = pb.start();
+            if (!process.waitFor(5, TimeUnit.SECONDS)) {
+                process.destroy();
+                throw new IOException("FFmpeg timed out");
+            }
+            
+            if (process.exitValue() != 0) {
+                throw new IOException("FFmpeg failed with code " + process.exitValue());
+            }
+            
+            if (!Files.exists(Paths.get(wavPath))) {
+                throw new IOException("No WAV file was created");
+            }
+            
+            return wavPath;
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+            throw new IOException("Conversion interrupted", e);
         }
     }
 }
